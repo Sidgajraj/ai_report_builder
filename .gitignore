@@ -3,6 +3,25 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# Data & outputs
+data/raw/
+data/cleaned/
+outputs/
+*.duckdb
+*.csv
+
+
 # C extensions
 *.so
 

@@ -1,0 +1,6 @@
+pandas 
+openpyxl
+duckdb
+python-dotenv
+rich
+openai
