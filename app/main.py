@@ -20,11 +20,11 @@ def clean_column(col: str) -> str:
 def load_excel():
     if not RAW_DIR.exists():
         raise FileNotFoundError("data/raw does not exist")
-    
+
     files = list(RAW_DIR.glob("*.xlsx"))
     if not files:
         raise FileNotFoundError("No Excel files found in data/raw")
-    
+
     os.makedirs("outputs", exist_ok=True)
     con = duckdb.connect(str(DB_PATH))
 
@@ -58,31 +58,32 @@ def load_excel():
             df = df.loc[:, ~df.columns.str.match(r"^unnamed")]
 
             # 4) Strip whitespace from string cells
-            # Strip whitespace only from string/object columns (version-safe)
-            obj_cols = df.select_dtypes(include=["object", "string"]).columns
-            # Strip whitespace only from string/object columns (preserve NaNs)
             obj_cols = df.select_dtypes(include=["object", "string"]).columns
             for c in obj_cols:
-                df[c] = df[c].where(df[c].isna(), df[c].astype(str).str.strip())
+                df[c] = df[c].apply(lambda x: x.strip() if isinstance(x, str) else x)
 
+            # 5) Create numeric duration_seconds from "mm:ss"
+            if "duration" in df.columns:
+                dur = df["duration"].astype(str).str.strip()
+                parts = dur.str.split(":", expand=True)
 
-
-
+                if parts.shape[1] == 2:
+                    mins = pd.to_numeric(parts[0], errors="coerce")
+                    secs = pd.to_numeric(parts[1], errors="coerce")
+                    df["duration_seconds"] = mins * 60 + secs
 
             table_name = f"{file.stem}_{sheet}".lower().replace(" ", "_")
-
             table_name = "".join(c for c in table_name if c.isalnum() or c == "_")
 
             con.register("df_tmp", df)
-
-            con.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM df_tmp")
-
+            con.execute(f'CREATE OR REPLACE TABLE "{table_name}" AS SELECT * FROM df_tmp')
             con.unregister("df_tmp")
 
             tables.append(table_name)
             print(f"  - Loaded sheet '{sheet}' -> table: {table_name} ({len(df)} rows)")
 
     return con, tables
+
         
 def main():
     # Load OPENAI_API_KEY from .env into environment variables
@@ -97,7 +98,7 @@ def main():
     # { "table": [("col","type"), ...], ... }
     schema = {}
     for t in tables:
-        desc = con.execute(f"DESCRIBE {t}").fetchall()
+        desc = con.execute(f'DESCRIBE "{t}"').fetchall()
         schema[t] = [(r[0], r[1]) for r in desc]
 
     print("\n[bold green]Loaded tables:[/bold green]")
@@ -131,6 +132,9 @@ def main():
         print("\nSaved to outputs/result.csv")
     except Exception as e:
         print("[bold red]SQL error:[/bold red]", e)
+    
+    finally:
+        con.close()
 
 
 if __name__ == "__main__":
