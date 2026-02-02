@@ -7,7 +7,7 @@ It converts spreadsheets into a DuckDB database and uses an AI agent to safely g
 Demo
 Video walkthrough:
 
-
+https://github.com/user-attachments/assets/627d77f8-4ac3-4bfe-99da-3ccd1c383840
 
 What it does
 
