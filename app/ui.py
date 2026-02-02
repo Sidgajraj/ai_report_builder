@@ -62,12 +62,11 @@ def main():
     st.set_page_config(page_title="AI Report Builder", layout="wide")
 
     st.title("AI Report Builder")
-    st.caption("Upload an Excel report, ask questions in English, and get SQL + results.")
+    st.caption("Upload Data, ask questions in English, and get SQL + results.")
 
     # Sidebar: upload + settings
     with st.sidebar:
-        st.header("Upload")
-        uploaded = st.file_uploader("Upload Excel (.xlsx)", type=["xlsx"])
+        uploaded = st.file_uploader("Upload Data", type=["xlsx"])
 
         st.divider()
         st.header("Mode")
@@ -75,7 +74,7 @@ def main():
 
     # If no file yet, show instructions and stop
     if uploaded is None:
-        st.info("Upload a single Excel (.xlsx) file to begin.")
+        st.info("Upload data to begin.")
         st.stop()
 
     # Step 1: Save uploaded file -> data/raw (single-file mode)
@@ -101,7 +100,7 @@ def main():
 
     # Step 4: Ask question (English)
     st.subheader("Ask a question")
-    prompt = st.text_input("Example: Count calls by source", value="")
+    prompt = st.text_input("", value="")
 
     run = st.button("Run", type="primary")
 
